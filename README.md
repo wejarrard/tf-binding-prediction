@@ -18,8 +18,6 @@ In this repository, you'll find a structured process to:
 ├── finetuning
 │ ├── preprocessing script
 │ └── training script
-└── testing
-└── testing.ipynb
 ```
 
 ## Quick Start
