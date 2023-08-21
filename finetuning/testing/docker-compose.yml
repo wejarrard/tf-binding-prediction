@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  tf-footprinting:
+    image: tf-footprinting:latest
+    build: .
+    volumes:
+      - /Users/wejarrard/projects/atacToChip/finetuning/testing/tf-footprinting:/app/tf-footprinting
+    stdin_open: true
+    tty: true
