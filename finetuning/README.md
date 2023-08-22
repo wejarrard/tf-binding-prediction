@@ -28,7 +28,7 @@ Follow the steps below to fine-tune your model:
 7. **Access the Fine-tuned Model**:
    - The fine-tuned model will be available in the same S3 bucket at: `s3://tf-binding-sites/finetuning/models`.
 
-# 📖 Additional Reading
+## 📖 Additional Reading
 
 For a comprehensive guide on the various data processing techniques we've explored, please refer to our dedicated documentation: [**data-processing-notes**](./data-processing-notes).
 
