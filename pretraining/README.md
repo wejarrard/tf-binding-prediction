@@ -19,6 +19,7 @@ Follow these steps to pretrain your model:
    - Navigate to the `pretraining` folder.
    - Execute the preprocessing script. (This might take a few hours.)
    - After preprocessing, run the training script.
+    > **Note**: Training script is currently being rewritten to work in SageMaker, will not work currently.
 
 5. **Output**:
    - Once training is complete, your outputs can be found in `s3://tf-binding-sites/pretraining`.
