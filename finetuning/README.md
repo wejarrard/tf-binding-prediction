@@ -30,7 +30,7 @@ Follow the steps below to fine-tune your model:
 
 # 📖 Additional Reading
 
-For a comprehensive guide on the various data processing techniques we've explored, please refer to our dedicated documentation: **data-processing-notes**.
+For a comprehensive guide on the various data processing techniques we've explored, please refer to our dedicated documentation: [**data-processing-notes**](./data-processing-notes).
 
 ## 📝 **To-Do List**
 
