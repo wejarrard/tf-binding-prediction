@@ -39,7 +39,7 @@ This document provides a detailed summary of the various data preprocessing meth
 
 ### 🔜 Next Steps:
 
-💡 Given the observations, there's an evident need to brainstorm methods that could potentially augment the impact of reads on our predictions. This might necessitate a deeper examination of the dataset or pondering over architectural modifications for heightened sensitivity to reads.
+💡 Given the observations, there's an evident need to brainstorm methods that could potentially augment the impact of reads on our predictions. This might mean a deeper examination of the dataset or thinking about architectural modifications for heightened sensitivity to reads.
 
 ---
 
