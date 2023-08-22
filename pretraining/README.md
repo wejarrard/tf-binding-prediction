@@ -32,5 +32,5 @@ Follow these steps to pretrain your model:
 
 ## ✅ **Completed Tasks**
 
-🔳 **Documentation**: Crafted the README file and organized this to-do list.
+🔳 **Documentation**: Crafted the README file and organized this to-do list.  
 🔳 **Model Parameters**: Establish a central location to store and track various parameters tested on the model.  
