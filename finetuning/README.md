@@ -30,9 +30,9 @@ Follow the steps below to fine-tune your model:
 
 ## 📝 **To-Do List**
 
-🔲 **Model Parameters**: Create a centralized location to manage and monitor the model's tested parameters.  
 🔲 **Testing Script Update**: Modify `testing/testing.ipynb` to account for CHIP peaks absent in ATAC peaks as negative predictions. (Note: This was previously done but got lost).
 
 ## ✅ **Completed Tasks**
 
 🔳 **Documentation**: Developed the README file and structured this task list.
+🔳 **Model Parameters**: Create a centralized location to manage and monitor the model's tested parameters.  
