@@ -28,10 +28,10 @@ Follow these steps to pretrain your model:
 
 🔲 **Redo Scripts**: Implement command line arguments and utilize feather files.  
 🔲 **SageMaker Setup**: Initialize the training script on SageMaker.  
-🔲 **Preprocessing Automation**: Ensure preprocessing runs in the background. Consider using a notebook job.  
 🔲 **Enhance Model Capabilities**: Determine a method for the model to actually utilize reads during prediction. Brainstorm with David.
 
 ## ✅ **Completed Tasks**
 
 🔳 **Documentation**: Crafted the README file and organized this to-do list.  
 🔳 **Model Parameters**: Establish a central location to store and track various parameters tested on the model.  
+🔳 **Preprocessing Automation**: Ensure preprocessing runs in the background. Consider using a notebook job. Should be complete, double check running preprocessing script.  
