@@ -34,9 +34,9 @@ For a comprehensive guide on the various data processing techniques we've explor
 
 ## 📝 **To-Do List**
 
-🔲 **Model Parameters**: Create a centralized location to manage and monitor the model's tested parameters.  
-🔲 **Testing Script Update**: Modify `testing/testing.ipynb` to account for CHIP peaks absent in ATAC peaks as negative predictions. (Note: This was previously done but got lost).
-
+🔲 **Testing Script Update**: Modify `testing/testing.ipynb` to account for CHIP peaks absent in ATAC peaks as negative predictions. (Note: This was previously done but got lost).  
+🔲 **Attempted with Simulated Data**: Why arnt we seeing any information in the peaks? Pass in peak vs no peak and see if it can at least predict that from the read information.
 ## ✅ **Completed Tasks**
 
-🔳 **Documentation**: Developed the README file and structured this task list.
+🔳 **Documentation**: Developed the README file and structured this task list.  
+🔳 **Model Parameters**: Create a centralized location to manage and monitor the model's tested parameters.  
