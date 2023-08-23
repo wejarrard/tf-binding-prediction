@@ -118,7 +118,7 @@ class GenomicsDataset(Dataset):
             'reads': final_read_counts
         }
 
-    def min_max_norm_global(self, x, min_val, max_val, scale_max=1000):
+    def min_max_norm_global(self, x, min_val, max_val, scale_max=1):
         for i in range(len(x)):
             x[i] = scale_max * (x[i] - min_val) / (max_val - min_val)
             if x[i] < 0:
