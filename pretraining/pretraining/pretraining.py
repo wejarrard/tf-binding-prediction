@@ -2,6 +2,13 @@ import os
 import sys
 
 
+# To disable Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
+os.environ['TOKENIZERS_PARALLELISM'] = 'false'
+
+# set the environment variables
+os.environ['SM_CHANNEL_TRAINING'] = '/Users/wejarrard/projects/atacToChip/tf-binding-prediction/pretraining/preprocessing/output'
+os.environ['SM_OUTPUT_DATA_DIR'] = './output'
+
 import random
 import logging
 from time import time
@@ -16,15 +23,12 @@ from torch.utils.data.dataloader import DataLoader
 from transformers import AutoConfig, ElectraForMaskedLM, ElectraForPreTraining
 
 from electra import Electra
-from dataset import GenomeDataset
+from dataset import GenomicsDataset
 from tokenizer import get_tokenizer
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
-
-# To disable Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
-os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
 ########################################################################################################
 # args
@@ -52,7 +56,7 @@ class Args:
     opt_warmup_steps: int = 5000  # Tried 10_000, 5000, 2500
     opt_num_training_steps: int = 200_000
 
-    step_log: int = 20
+    step_log: int = 1
     step_ckpt: int = 100
 
 
@@ -91,14 +95,13 @@ def train(rank, args):
 
     #######################
     # dataset
-    min_val, max_val = 0, 366.0038259577389
     batch_size = 16
     num_workers = 1
 
     # Define tokenizer and dataset
     tokenizer = get_tokenizer("tokenizer.json")
     vocab_size = len(tokenizer)
-    dataset = GenomeDataset(min_val, max_val)
+    dataset = GenomicsDataset()
 
     # Create dataloader
     dataloader = DataLoader(dataset, batch_size=batch_size,
@@ -141,7 +144,7 @@ def train(rank, args):
         mask_prob=args.model_mask_prob,
         random_token_prob=0.0).to(device))
 
-    model = torch.compile(model)
+    # model = torch.compile(model)
 
     #######################
     # optimizer
@@ -201,7 +204,7 @@ def train(rank, args):
             pad_token_id=0,
             mask_prob=args.model_mask_prob,
             random_token_prob=0.0).to(device))
-        model = torch.compile(model)
+        # model = torch.compile(model)
         
         optimizer.load_state_dict(torch.load(
             f'{latest_checkpoint}/optimizer.pth'))
@@ -222,18 +225,13 @@ def train(rank, args):
 
     for step in range(start_step, args.opt_num_training_steps):
 
-        position_ids, chromosome, input_ids, reads = next(iter(dataloader))
-        
+        data = next(iter(dataloader))
 
-        input_ids = input_ids.squeeze(1)
-        position_ids = position_ids.squeeze(1)
-        chromosome = chromosome.squeeze(1)
-        reads = reads.squeeze(1)
+        input_ids = data['input_ids'].to(device)
+        position_ids = data['position_ids'].to(device)
+        chromosome = data['chromosome'].to(device)
+        reads = data['reads'].to(device)
 
-        input_ids = input_ids.to(device)
-        position_ids = position_ids.to(device)
-        chromosome = chromosome.to(device)
-        reads = reads.to(device)
 
         optimizer.zero_grad()
 
@@ -319,10 +317,10 @@ def get_exp_id(file):
     return os.path.splitext(os.path.basename(file))[0]
 
 
-def get_output_dir(exp_id):
+def get_output_dir(exp_id, output_path):
     import datetime
     t = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
-    output_dir = os.path.join('output/' + exp_id, t)
+    output_dir = os.path.join(output_path + exp_id, t)
     os.makedirs(output_dir, exist_ok=True)
     return output_dir
 
@@ -359,18 +357,19 @@ def get_latest_checkpoint(checkpoint_dir):
 # main
 
 
-def main():
+import argparse
+import os
+
+
+def main(args, output_path):
 
     # preamble
     exp_id = get_exp_id(__file__)
-    output_dir = get_output_dir(exp_id)
-    output_dir = '/home/ec2-user/model'
+    output_dir = get_output_dir(exp_id, output_path)
     os.makedirs(output_dir, exist_ok=True)
     os.makedirs(f'{output_dir}/ckpt', exist_ok=True)
     copy_source(__file__, output_dir)
 
-    # args
-    args = Args()
     args.output_dir = output_dir
     args.exp_id = exp_id
 
@@ -383,6 +382,27 @@ def main():
     else:
         train(rank=args.gpu, args=args)
 
-
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data-dir', type=str, default=os.path.join(os.environ['SM_CHANNEL_TRAINING'], "train"))
+    parser.add_argument('--lr', type=float)
+    parser.add_argument('--config-path', type=str, default=os.environ['SM_CHANNEL_TRAINING'])
+    parser.add_argument('--batch-size', type=int, default=16)
+    # parser.add_argument('--patience', type=int, default=5)
+    parser.add_argument('--output-data-dir', type=str, default=os.environ['SM_OUTPUT_DATA_DIR'])
+
+    command_args = parser.parse_args()
+
+    # Populate the Args class using the parsed command line arguments
+    args = Args()
+    args.opt_lr = command_args.lr
+    args.opt_batch_size = command_args.batch_size
+    args.model_discriminator = os.path.join(command_args.config_path, "discriminator.json")
+    args.model_discriminator = os.path.join(command_args.config_path, "generator.json")
+
+    main(args, command_args.output_data_dir)
+
+# python pretraining.py \
+#     --lr 3e-4
+    
+
