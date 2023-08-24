@@ -6,8 +6,10 @@ import json
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
 # set the environment variables
-# os.environ['SM_CHANNEL_TRAINING'] = '/Users/wejarrard/projects/atacToChip/tf-binding-prediction/pretraining/preprocessing/output'
-# os.environ['SM_OUTPUT_DATA_DIR'] = './output/'
+os.environ['SM_CHANNEL_TRAINING'] = '/Users/wejarrard/projects/atacToChip/tf-binding-prediction/pretraining/preprocessing/output'
+os.environ['SM_OUTPUT_DATA_DIR'] = './output/'
+# make output directory
+os.makedirs(os.environ['SM_OUTPUT_DATA_DIR'], exist_ok=True)
 
 import random
 import logging
@@ -58,6 +60,8 @@ class Args:
 
     step_log: int = 1
     step_ckpt: int = 100
+    
+    max_patience: int = 500
 
 
 ########################################################################################################
@@ -219,6 +223,9 @@ def train(rank, args):
 
     args.opt_num_training_steps = len(dataloader)
 
+    best_loss = float('inf')
+    patience_counter = 0
+
     # log number of training steps
     logging.info(
         f'Number of training steps left: {args.opt_num_training_steps - start_step}')
@@ -286,6 +293,21 @@ def train(rank, args):
                        f'{checkpoint_path}/optimizer.pth')
             torch.save(scheduler.state_dict(),
                        f'{checkpoint_path}/scheduler.pth')
+            
+        if loss.item() < best_loss:
+            best_loss = loss.item()
+            patience_counter = 0
+            torch.save(model.state_dict(), f'{args.output_dir}/best_model.pth')
+            # write text file with current step
+            with open(f'{args.output_dir}/best_step.txt', 'w') as f:
+                f.write(str(step))
+        else:
+            patience_counter += 1
+
+        if patience_counter >= args.max_patience:
+            print(f"Early stopping due to no improvement after {args.max_patience} steps.")
+            break
+
 
 
 ########################################################################################################
@@ -390,6 +412,7 @@ if __name__ == '__main__':
     parser.add_argument('--config-path', type=str, default=os.environ['SM_CHANNEL_TRAINING'])
     parser.add_argument('--batch-size', type=int, default=16)
     parser.add_argument('--output-data-dir', type=str, default=os.environ['SM_OUTPUT_DATA_DIR'])
+    parser.add_argument('--patience', type=int, default=500)
 
     parser.add_argument('--discriminator-attention-probs-dropout-prob', type=float, default=0.1)
     parser.add_argument('--discriminator-hidden-dropout-prob', type=float, default=0.4)
@@ -412,6 +435,7 @@ if __name__ == '__main__':
     args.opt_batch_size = command_args.batch_size
     args.model_discriminator = os.path.join(command_args.config_path, "discriminator.json")
     args.model_generator = os.path.join(command_args.config_path, "generator.json")
+    args.max_patience = command_args.patience
 
     # Load and update discriminator config
     with open(args.model_discriminator, 'r') as file:
