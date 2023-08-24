@@ -1,13 +1,13 @@
 import os
 import sys
-
+import json
 
 # To disable Explicitly set the environment variable TOKENIZERS_PARALLELISM=(true | false)
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
 # set the environment variables
-os.environ['SM_CHANNEL_TRAINING'] = '/Users/wejarrard/projects/atacToChip/tf-binding-prediction/pretraining/preprocessing/output'
-os.environ['SM_OUTPUT_DATA_DIR'] = './output'
+# os.environ['SM_CHANNEL_TRAINING'] = '/Users/wejarrard/projects/atacToChip/tf-binding-prediction/pretraining/preprocessing/output'
+# os.environ['SM_OUTPUT_DATA_DIR'] = './output/'
 
 import random
 import logging
@@ -382,14 +382,27 @@ def main(args, output_path):
     else:
         train(rank=args.gpu, args=args)
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--data-dir', type=str, default=os.path.join(os.environ['SM_CHANNEL_TRAINING'], "train"))
     parser.add_argument('--lr', type=float)
     parser.add_argument('--config-path', type=str, default=os.environ['SM_CHANNEL_TRAINING'])
     parser.add_argument('--batch-size', type=int, default=16)
-    # parser.add_argument('--patience', type=int, default=5)
     parser.add_argument('--output-data-dir', type=str, default=os.environ['SM_OUTPUT_DATA_DIR'])
+
+    parser.add_argument('--discriminator-attention-probs-dropout-prob', type=float, default=0.1)
+    parser.add_argument('--discriminator-hidden-dropout-prob', type=float, default=0.4)
+    parser.add_argument('--discriminator-hidden-size', type=int, default=256)
+    parser.add_argument('--discriminator-intermediate-size', type=int, default=1024)
+    parser.add_argument('--discriminator-num-attention-heads', type=int, default=4)
+
+
+    parser.add_argument('--generator-attention-probs-dropout-prob', type=float, default=0.05)
+    parser.add_argument('--generator-hidden-dropout-prob', type=float, default=0.05)
+    parser.add_argument('--generator-hidden-size', type=int, default=128)
+    parser.add_argument('--generator-intermediate-size', type=int, default=512)
+    parser.add_argument('--generator-num-attention-heads', type=int, default=2)
 
     command_args = parser.parse_args()
 
@@ -398,7 +411,36 @@ if __name__ == '__main__':
     args.opt_lr = command_args.lr
     args.opt_batch_size = command_args.batch_size
     args.model_discriminator = os.path.join(command_args.config_path, "discriminator.json")
-    args.model_discriminator = os.path.join(command_args.config_path, "generator.json")
+    args.model_generator = os.path.join(command_args.config_path, "generator.json")
+
+    # Load and update discriminator config
+    with open(args.model_discriminator, 'r') as file:
+        discriminator_config = json.load(file)
+        discriminator_config['attention_probs_dropout_prob'] = command_args.discriminator_attention_probs_dropout_prob
+        discriminator_config['hidden_dropout_prob'] = command_args.discriminator_hidden_dropout_prob
+        discriminator_config['hidden_size'] = command_args.discriminator_hidden_size
+        discriminator_config['intermediate_size'] = command_args.discriminator_intermediate_size
+        discriminator_config['num_attention_heads'] = command_args.discriminator_num_attention_heads
+
+    # Save updated discriminator config
+    with open(os.path.join(command_args.output_data_dir, 'discriminator.json'), 'w') as file:
+        json.dump(discriminator_config, file)
+
+    # Load and update generator config
+    with open(args.model_generator, 'r') as file:
+        generator_config = json.load(file)
+        generator_config['attention_probs_dropout_prob'] = command_args.generator_attention_probs_dropout_prob
+        generator_config['hidden_dropout_prob'] = command_args.generator_hidden_dropout_prob
+        generator_config['hidden_size'] = command_args.generator_hidden_size
+        generator_config['intermediate_size'] = command_args.generator_intermediate_size
+        generator_config['num_attention_heads'] = command_args.generator_num_attention_heads
+
+    # Save updated generator config
+    with open(os.path.join(command_args.output_data_dir, 'generator.json'), 'w') as file:
+        json.dump(generator_config, file)
+
+    args.model_discriminator = os.path.join(command_args.output_data_dir, "discriminator.json")
+    args.model_generator = os.path.join(command_args.output_data_dir, "generator.json")
 
     main(args, command_args.output_data_dir)
 
