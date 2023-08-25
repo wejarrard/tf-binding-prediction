@@ -103,7 +103,7 @@ def train(rank, args):
     num_workers = 1
 
     # Define tokenizer and dataset
-    tokenizer = get_tokenizer("tokenizer.json")
+    tokenizer = get_tokenizer(f"{os.environ['SM_CHANNEL_TRAINING']}/tokenizer.json")
     vocab_size = len(tokenizer)
     dataset = GenomicsDataset()
 
