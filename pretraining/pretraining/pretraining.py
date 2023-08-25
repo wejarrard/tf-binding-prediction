@@ -6,10 +6,10 @@ import json
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
 # set the environment variables
-os.environ['SM_CHANNEL_TRAINING'] = '/Users/wejarrard/projects/atacToChip/tf-binding-prediction/pretraining/preprocessing/output'
-os.environ['SM_OUTPUT_DATA_DIR'] = './output/'
-# make output directory
-os.makedirs(os.environ['SM_OUTPUT_DATA_DIR'], exist_ok=True)
+# os.environ['SM_CHANNEL_TRAINING'] = '/Users/wejarrard/projects/atacToChip/tf-binding-prediction/pretraining/preprocessing/output'
+# os.environ['SM_OUTPUT_DATA_DIR'] = './output/'
+# # make output directory
+# os.makedirs(os.environ['SM_OUTPUT_DATA_DIR'], exist_ok=True)
 
 import random
 import logging
