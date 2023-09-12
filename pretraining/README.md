@@ -26,7 +26,8 @@ Follow these steps to pretrain your model:
 
 ## 📝 **To-Do List**
 
-🔲 **Enhance Model Capabilities**: Determine a method for the model to actually utilize reads during prediction. Brainstorm with David.
+🔲 **Enhance Model Capabilities**: Determine a method for the model to actually utilize reads during prediction. Brainstorm with David.  
+🔲 **Add Promoters and Random**: Add promoter regions and random regions to preprocessing.
 
 ## ✅ **Completed Tasks**
 
