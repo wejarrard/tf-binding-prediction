@@ -6,10 +6,10 @@ import json
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
 # set the environment variables
-# os.environ['SM_CHANNEL_TRAINING'] = '/Users/wejarrard/projects/atacToChip/tf-binding-prediction/pretraining/preprocessing/output'
-# os.environ['SM_OUTPUT_DATA_DIR'] = './output/'
-# # make output directory
-# os.makedirs(os.environ['SM_OUTPUT_DATA_DIR'], exist_ok=True)
+os.environ['SM_CHANNEL_TRAINING'] = '/Users/wejarrard/projects/atacToChip/tf-binding-prediction/pretraining/preprocessing/output'
+os.environ['SM_OUTPUT_DATA_DIR'] = './output/'
+# make output directory
+os.makedirs(os.environ['SM_OUTPUT_DATA_DIR'], exist_ok=True)
 
 import random
 import logging
@@ -54,7 +54,9 @@ class Args:
     model_mask_prob: float = 0.15
 
     opt_lr: float = 3e-4  # Tried 5e-4, 4e-4
-    opt_batch_size: int = 128 // distributed_world_size if distributed_enabled else 128
+    opt_batch_size: int = 128 // distributed_world_size if distributed_enabled else 64
+    opt_num_workers = torch.multiprocessing.cpu_count()
+
     opt_warmup_steps: int = 5000  # Tried 10_000, 5000, 2500
     opt_num_training_steps: int = 200_000
 
@@ -71,6 +73,7 @@ def train(rank, args):
 
     #######################
     # distributed
+    print(f'Args: {args}')
 
     if args.distributed_enabled:
         torch.distributed.init_process_group(
@@ -99,17 +102,19 @@ def train(rank, args):
 
     #######################
     # dataset
-    batch_size = 16
-    num_workers = 1
+    
 
     # Define tokenizer and dataset
     tokenizer = get_tokenizer(f"{os.environ['SM_CHANNEL_TRAINING']}/tokenizer.json")
     vocab_size = len(tokenizer)
+
+
+    print("Loading dataset...")
     dataset = GenomicsDataset()
 
     # Create dataloader
-    dataloader = DataLoader(dataset, batch_size=batch_size,
-                            num_workers=num_workers, drop_last=True)
+    dataloader = DataLoader(dataset, batch_size=args.opt_batch_size,
+                            num_workers=args.opt_num_workers, drop_last=True)
 
     #######################
     # model
@@ -131,6 +136,8 @@ def train(rank, args):
 
         def forward(self, *args, **kwargs):
             return self.adaptee(*args, **kwargs)[0]
+        
+    print("Loading model...")
 
     generator = ElectraForMaskedLM(
         AutoConfig.from_pretrained(args.model_generator))
@@ -187,6 +194,8 @@ def train(rank, args):
     checkpoint_dir = f'{args.output_dir}/ckpt'
     latest_checkpoint = get_latest_checkpoint(checkpoint_dir)
     start_step = 0
+
+    print("Starting training...")
 
     if latest_checkpoint is not None:
         logger.info(f'Loading checkpoint: {latest_checkpoint}')
@@ -397,11 +406,13 @@ def main(args, output_path):
 
     # distributed
     if args.distributed_enabled:
+        print("Training in distributed mode with multiple processes, 1 GPU per process.")
         os.environ['MASTER_ADDR'] = 'localhost'
         os.environ['MASTER_PORT'] = str(args.distributed_port)
         torch.multiprocessing.spawn(
             train, nprocs=args.distributed_world_size, args=(args,))
     else:
+        print("Training with a single process on 1 GPU.")
         train(rank=args.gpu, args=args)
 
 
